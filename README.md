@@ -21,60 +21,41 @@ git add -A && git commit -m "Your message" && git push
 
 ## Adding Blog Posts
 
-1. Create a new file in `src/pages/blog/`:
+Create a markdown file in `src/content/blog/`:
 
-```bash
-touch src/pages/blog/your-post-slug.astro
-```
-
-2. Use this template:
-
-```astro
+```markdown
 ---
-import Layout from '../../layouts/Layout.astro';
+title: "Your Post Title"
+date: "2024-12-30"
+excerpt: "Brief description shown on homepage."
 ---
 
-<Layout title="Your Post Title" description="Brief description for SEO">
-  <article class="prose">
-    <h1>Your Post Title</h1>
-    <p class="text-[var(--color-text-muted)]">December 30, 2024</p>
+Your content here. Supports **markdown** formatting.
 
-    <p>Your content here...</p>
+## Headings work
 
-    <h2>Section heading</h2>
-    <p>More content...</p>
-
-    <pre><code>code blocks work too</code></pre>
-  </article>
-</Layout>
-```
-
-3. Add the post to the homepage list in `src/pages/index.astro`:
+So do code blocks:
 
 ```typescript
-const posts = [
-  {
-    title: "Your Post Title",
-    date: "2024-12-30",
-    slug: "your-post-slug",
-    excerpt: "Brief description shown on homepage."
-  },
-  // ... other posts
-];
+const x = 1;
+```
 ```
 
-4. Commit and push — it'll deploy automatically.
+That's it. The post automatically appears on the homepage, sorted by date.
 
 ## Project Structure
 
 ```
 src/
+├── content/
+│   └── blog/             # Markdown blog posts go here
 ├── layouts/
 │   └── Layout.astro      # Base layout with header/footer
 ├── pages/
-│   ├── index.astro       # Homepage (blog listing)
+│   ├── index.astro       # Homepage (auto-lists posts)
 │   ├── about.astro       # About page
-│   └── blog/             # Blog posts go here
+│   └── blog/
+│       └── [slug].astro  # Dynamic blog post pages
 └── styles/
     └── global.css        # Theme colors and typography
 ```
