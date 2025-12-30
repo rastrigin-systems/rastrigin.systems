@@ -1,43 +1,80 @@
-# Astro Starter Kit: Minimal
+# rastrigin.systems
 
-```sh
-bun create astro@latest -- --template minimal
+Personal site built with Astro and Tailwind CSS.
+
+## Development
+
+```bash
+bun install
+bun dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Site runs at `http://localhost:4321`
 
-## 🚀 Project Structure
+## Deployment
 
-Inside of your Astro project, you'll see the following folders and files:
+Deployed to Cloudflare Pages. Pushes to `main` trigger automatic deploys.
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```bash
+git add -A && git commit -m "Your message" && git push
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Adding Blog Posts
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+1. Create a new file in `src/pages/blog/`:
 
-Any static assets, like images, can be placed in the `public/` directory.
+```bash
+touch src/pages/blog/your-post-slug.astro
+```
 
-## 🧞 Commands
+2. Use this template:
 
-All commands are run from the root of the project, from a terminal:
+```astro
+---
+import Layout from '../../layouts/Layout.astro';
+---
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `bun install`             | Installs dependencies                            |
-| `bun dev`             | Starts local dev server at `localhost:4321`      |
-| `bun build`           | Build your production site to `./dist/`          |
-| `bun preview`         | Preview your build locally, before deploying     |
-| `bun astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `bun astro -- --help` | Get help using the Astro CLI                     |
+<Layout title="Your Post Title" description="Brief description for SEO">
+  <article class="prose">
+    <h1>Your Post Title</h1>
+    <p class="text-[var(--color-text-muted)]">December 30, 2024</p>
 
-## 👀 Want to learn more?
+    <p>Your content here...</p>
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+    <h2>Section heading</h2>
+    <p>More content...</p>
+
+    <pre><code>code blocks work too</code></pre>
+  </article>
+</Layout>
+```
+
+3. Add the post to the homepage list in `src/pages/index.astro`:
+
+```typescript
+const posts = [
+  {
+    title: "Your Post Title",
+    date: "2024-12-30",
+    slug: "your-post-slug",
+    excerpt: "Brief description shown on homepage."
+  },
+  // ... other posts
+];
+```
+
+4. Commit and push — it'll deploy automatically.
+
+## Project Structure
+
+```
+src/
+├── layouts/
+│   └── Layout.astro      # Base layout with header/footer
+├── pages/
+│   ├── index.astro       # Homepage (blog listing)
+│   ├── about.astro       # About page
+│   └── blog/             # Blog posts go here
+└── styles/
+    └── global.css        # Theme colors and typography
+```
