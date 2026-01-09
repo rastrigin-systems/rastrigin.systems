@@ -1,0 +1,165 @@
+---
+interface Props {
+  code: string;
+  id?: string;
+}
+
+const { code, id = `mermaid-${Math.random().toString(36).slice(2, 9)}` } = Astro.props;
+---
+
+<div class="mermaid-container" data-mermaid-id={id}>
+  <div class="mermaid-toggle">
+    <button class="toggle-btn active" data-view="svg">SVG</button>
+    <button class="toggle-btn" data-view="code">Code</button>
+  </div>
+
+  <div class="mermaid-svg" data-target="svg">
+    <div class="mermaid-loading">Rendering diagram...</div>
+  </div>
+
+  <div class="mermaid-code hidden" data-target="code">
+    <pre><code>{code}</code></pre>
+  </div>
+</div>
+
+<script type="module" define:vars={{ code, id }}>
+  import mermaid from 'mermaid';
+
+  // Initialize mermaid
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    themeVariables: {
+      darkMode: true,
+      background: '#1c1c1f',
+      primaryColor: '#818cf8',
+      primaryTextColor: '#fafafa',
+      primaryBorderColor: '#27272a',
+      lineColor: '#a1a1aa',
+      secondaryColor: '#22d3ee',
+      tertiaryColor: '#09090b',
+      fontFamily: 'Inter, system-ui, sans-serif',
+    },
+  });
+
+  const container = document.querySelector(`[data-mermaid-id="${id}"]`);
+  const svgContainer = container.querySelector('[data-target="svg"]');
+  const codeContainer = container.querySelector('[data-target="code"]');
+  const toggleBtns = container.querySelectorAll('.toggle-btn');
+
+  // Render the mermaid diagram
+  async function renderDiagram() {
+    try {
+      const { svg } = await mermaid.render(`${id}-svg`, code);
+      svgContainer.innerHTML = svg;
+    } catch (error) {
+      svgContainer.innerHTML = `<div class="mermaid-error">Error rendering diagram: ${error.message}</div>`;
+    }
+  }
+
+  // Toggle between SVG and code views
+  toggleBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+
+      toggleBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      if (view === 'svg') {
+        svgContainer.classList.remove('hidden');
+        codeContainer.classList.add('hidden');
+      } else {
+        svgContainer.classList.add('hidden');
+        codeContainer.classList.remove('hidden');
+      }
+    });
+  });
+
+  renderDiagram();
+</script>
+
+<style>
+  .mermaid-container {
+    margin: 1.5rem 0;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: var(--color-card);
+  }
+
+  .mermaid-toggle {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+  }
+
+  .toggle-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: none;
+    color: var(--color-muted);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-family: inherit;
+    transition: color 0.2s, background 0.2s;
+  }
+
+  .toggle-btn:hover {
+    color: var(--color-text);
+    background: var(--color-card);
+  }
+
+  .toggle-btn.active {
+    color: var(--color-primary);
+    background: var(--color-card);
+    border-bottom: 2px solid var(--color-primary);
+    margin-bottom: -1px;
+  }
+
+  .mermaid-svg {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100px;
+    overflow-x: auto;
+  }
+
+  .mermaid-svg :global(svg) {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .mermaid-code {
+    padding: 0;
+  }
+
+  .mermaid-code pre {
+    margin: 0;
+    padding: 1rem;
+    background: var(--color-bg);
+    overflow-x: auto;
+  }
+
+  .mermaid-code code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    color: var(--color-text);
+  }
+
+  .mermaid-loading {
+    color: var(--color-muted);
+    font-size: 0.875rem;
+  }
+
+  .mermaid-error {
+    color: #f87171;
+    font-size: 0.875rem;
+    padding: 1rem;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+</style>

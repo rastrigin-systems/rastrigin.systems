@@ -1,5 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import TableOfContents from '../../components/TableOfContents.astro';
+import MermaidToggle from '../../components/MermaidToggle.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -22,13 +24,45 @@ function formatDate(dateStr: string) {
 }
 ---
 
-<Layout title={`${post.data.title} - Sergei Rastrigin`} description={post.data.excerpt}>
-  <article class="prose">
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold mb-2">{post.data.title}</h1>
-      <time class="text-[var(--color-text-muted)]">{formatDate(post.data.date)}</time>
-    </header>
+<Layout title={post.data.title} description={post.data.excerpt} isPost={true}>
+  <div class="blog-layout">
+    <article class="prose">
+      <header class="mb-8">
+        <h1 class="text-3xl font-bold mb-2">{post.data.title}</h1>
+        {post.data.excerpt && (
+          <p class="text-lg text-[var(--color-text-muted)] mt-1 mb-3">{post.data.excerpt}</p>
+        )}
+        <time class="text-[var(--color-text-muted)] text-sm">{formatDate(post.data.date)}</time>
+      </header>
 
-    <Content />
-  </article>
+      <Content />
+    </article>
+
+    <aside class="toc-sidebar">
+      <TableOfContents />
+    </aside>
+  </div>
+
+  <MermaidToggle />
 </Layout>
+
+<style>
+  .blog-layout {
+    position: relative;
+  }
+
+  .toc-sidebar {
+    display: none;
+  }
+
+  /* Show TOC on larger screens, aligned with first section */
+  @media (min-width: 1280px) {
+    .toc-sidebar {
+      display: block;
+      position: fixed;
+      left: calc(50% + 21rem + 4rem);
+      top: 460px;
+      width: 14rem;
+    }
+  }
+</style>

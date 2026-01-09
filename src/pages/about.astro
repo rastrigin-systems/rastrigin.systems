@@ -2,20 +2,19 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="About - Sergei Rastrigin" description="Software engineer based in the UK, building developer tools and AI agent infrastructure.">
-  <section class="mb-8">
-    <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-[var(--color-text)] via-[var(--color-accent)] to-[var(--color-secondary)] bg-clip-text text-transparent">
-      About
-    </h1>
-  </section>
-
-  <article class="prose">
+<Layout title="About - Sergei Rastrigin" description="Software engineer exploring AI agents and developer tools." isAbout={true}>
+  <article class="prose max-w-xl">
     <p>
-      Hi, I'm Sergei. I'm exploring AI agents and building tools around them. This blog
-      is where I share what I learn.
-      <a href="https://github.com/rastrigin-systems/arfa" class="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]">Arfa</a>
-      is the first one.
+      Software engineer focused on understanding how modern software systems actually work beneath their abstractions.
     </p>
-
+    <p>
+      Most of my recent work has been around AI agents and developer tooling.
+    </p>
   </article>
+
+  <div class="mt-8 flex gap-4">
+    <a href="https://github.com/sergei-rastrigin" class="nav-link text-sm">GitHub</a>
+    <a href="https://linkedin.com/in/sergei-rastrigin" class="nav-link text-sm">LinkedIn</a>
+    <a href="mailto:sergei@rastrigin.systems" class="nav-link text-sm">Email</a>
+  </div>
 </Layout>

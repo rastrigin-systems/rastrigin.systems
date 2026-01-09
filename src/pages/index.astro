@@ -16,31 +16,26 @@ function formatDate(dateStr: string) {
 ---
 
 <Layout title="Sergei Rastrigin - Building Developer Tools">
-  <section class="mb-12">
-    <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-[var(--color-text)] via-[var(--color-accent)] to-[var(--color-secondary)] bg-clip-text text-transparent">
-      Blog
+  <section class="mb-10">
+    <h1 class="text-2xl font-medium mb-2 text-[var(--color-text)]">
+      Notes on <span class="headline-accent">architecture</span>, AI tooling, and system behavior.
     </h1>
-    <p class="text-lg text-[var(--color-text-muted)]">
-      Notes on AI, architecture decisions, and lessons from building things.
-    </p>
   </section>
 
   <section>
-    <div class="space-y-4">
+    <div class="post-list">
       {posts.map((post) => (
         <a
           href={`/blog/${post.id}`}
-          class="block p-6 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border)] hover:border-[var(--color-accent)] transition-all duration-200 group"
+          class="post-card block p-5 rounded-lg group"
         >
-          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
-            <h2 class="text-xl font-semibold group-hover:text-[var(--color-accent)] transition-colors">
-              {post.data.title}
-            </h2>
-            <time class="text-sm text-[var(--color-text-muted)] font-mono shrink-0">
-              {formatDate(post.data.date)}
-            </time>
-          </div>
-          <p class="text-[var(--color-text-muted)]">
+          <h2 class="text-lg font-medium text-[var(--color-text)] transition-colors">
+            {post.data.title}
+          </h2>
+          <time class="text-xs text-[var(--color-text-muted)] font-mono mt-1 block">
+            {formatDate(post.data.date)}
+          </time>
+          <p class="text-sm text-[var(--color-text-muted)] mt-2 leading-relaxed">
             {post.data.excerpt}
           </p>
         </a>
@@ -54,3 +49,52 @@ function formatDate(dateStr: string) {
     )}
   </section>
 </Layout>
+
+<style>
+  .headline-accent {
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent);
+    text-decoration-thickness: 3px;
+    text-underline-offset: 6px;
+  }
+
+  .post-list {
+    display: grid;
+    gap: 18px;
+  }
+
+  .post-card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.05));
+    border: none;
+    border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.03) inset,
+      var(--shadow-card);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .post-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 2px;
+    border-radius: 2px;
+    background: transparent;
+    transition: background 0.2s ease;
+  }
+
+  .post-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.03) inset,
+      var(--shadow-card-hover);
+  }
+
+  .post-card:hover::before {
+    background: var(--color-accent);
+  }
+</style>

@@ -1,0 +1,139 @@
+---
+// Table of Contents component - extracts h2 headings from article and creates a sticky sidebar
+---
+
+<nav class="toc" aria-label="Table of contents">
+  <ul class="toc-list"></ul>
+</nav>
+
+<script>
+  function initTOC() {
+    const article = document.querySelector('article');
+    const tocList = document.querySelector('.toc-list');
+    if (!article || !tocList) return;
+
+    // Find all h2 headings in the article
+    const headings = article.querySelectorAll('h2');
+    if (headings.length === 0) {
+      // Hide TOC if no headings
+      const toc = document.querySelector('.toc');
+      if (toc) toc.classList.add('hidden');
+      return;
+    }
+
+    // Create TOC items
+    headings.forEach((heading, index) => {
+      // Add id to heading if it doesn't have one
+      if (!heading.id) {
+        heading.id = `heading-${index}`;
+      }
+
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = `#${heading.id}`;
+      a.textContent = heading.textContent;
+      a.className = 'toc-link';
+
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        heading.scrollIntoView({ behavior: 'smooth' });
+        history.pushState(null, '', `#${heading.id}`);
+      });
+
+      li.appendChild(a);
+      tocList.appendChild(li);
+    });
+
+    // Highlight active section on scroll
+    const observerOptions = {
+      rootMargin: '-80px 0px -80% 0px',
+      threshold: 0
+    };
+
+    const setActiveLink = (id: string) => {
+      tocList.querySelectorAll('.toc-link').forEach(link => {
+        link.classList.remove('active');
+      });
+      const tocLink = tocList.querySelector(`a[href="#${id}"]`);
+      if (tocLink) {
+        tocLink.classList.add('active');
+      }
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setActiveLink(entry.target.id);
+        }
+      });
+    }, observerOptions);
+
+    headings.forEach(heading => observer.observe(heading));
+
+    // Handle edge case: when at bottom of page, activate last heading
+    const checkBottomOfPage = () => {
+      const scrolledToBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50;
+      if (scrolledToBottom && headings.length > 0) {
+        const lastHeading = headings[headings.length - 1];
+        setActiveLink(lastHeading.id);
+      }
+    };
+
+    window.addEventListener('scroll', checkBottomOfPage, { passive: true });
+  }
+
+  // Run on page load
+  initTOC();
+
+  // Re-run on view transitions (for Astro)
+  document.addEventListener('astro:page-load', initTOC);
+</script>
+
+<style is:global>
+  .toc {
+    position: sticky;
+    top: 2rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .toc-link {
+    display: block;
+    color: rgba(255, 255, 255, 0.35);
+    text-decoration: none;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    padding-left: 0.75rem;
+    border-left: 1px solid transparent;
+    transition: all 0.2s ease;
+  }
+
+  .toc-link:hover {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .toc-link.active {
+    color: var(--color-accent);
+    border-left-color: var(--color-accent);
+  }
+
+  .toc.hidden {
+    display: none;
+  }
+
+  /* Hide on mobile */
+  @media (max-width: 1024px) {
+    .toc {
+      display: none;
+    }
+  }
+</style>

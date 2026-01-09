@@ -4,9 +4,11 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
+  isPost?: boolean;
+  isAbout?: boolean;
 }
 
-const { title, description = "Software Engineer building tools for developers" } = Astro.props;
+const { title, description = "Software Engineer building tools for developers", isPost = false, isAbout = false } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -15,7 +17,9 @@ const { title, description = "Software Engineer building tools for developers" }
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -26,10 +30,16 @@ const { title, description = "Software Engineer building tools for developers" }
       <div class="max-w-2xl mx-auto px-6 py-12">
         <header class="mb-16">
           <nav class="flex items-center justify-between">
-            <a href="/" class="text-lg font-semibold hover:text-[var(--color-accent)] transition-colors">
-              Sergei Rastrigin
-            </a>
-            <a href="/about" class="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">About</a>
+            {isPost ? (
+              <a href="/" class="nav-link text-sm flex items-center gap-1">
+                <span>←</span> Notes
+              </a>
+            ) : (
+              <a href="/" class="text-lg font-semibold text-[var(--color-text)]">
+                Sergei Rastrigin
+              </a>
+            )}
+            {!isAbout && <a href="/about" class="nav-link">About</a>}
           </nav>
         </header>
 
@@ -39,14 +49,5 @@ const { title, description = "Software Engineer building tools for developers" }
       </div>
     </div>
 
-    <footer class="border-t border-[var(--color-border)] text-[var(--color-text-muted)] text-sm">
-      <div class="max-w-2xl mx-auto px-6 py-8">
-        <div class="flex gap-4">
-          <a href="https://github.com/sergei-rastrigin" class="hover:text-[var(--color-accent)] transition-colors">GitHub</a>
-          <a href="https://linkedin.com/in/sergei-rastrigin" class="hover:text-[var(--color-accent)] transition-colors">LinkedIn</a>
-          <a href="mailto:sergei@rastrigin.systems" class="hover:text-[var(--color-accent)] transition-colors">Email</a>
-        </div>
-      </div>
-    </footer>
   </body>
 </html>
