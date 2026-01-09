@@ -4,19 +4,19 @@
 
 <script>
   function initMermaidToggles() {
-    const wrappers = document.querySelectorAll('.mermaid-wrapper');
+    const diagrams = document.querySelectorAll('.mermaid-diagram');
 
-    wrappers.forEach((wrapper, index) => {
+    diagrams.forEach((diagram) => {
       // Skip if already initialized
-      if (wrapper.classList.contains('mermaid-initialized')) return;
-      wrapper.classList.add('mermaid-initialized');
+      if (diagram.classList.contains('mermaid-initialized')) return;
+      diagram.classList.add('mermaid-initialized');
 
-      const code = wrapper.getAttribute('data-mermaid-code');
+      const code = diagram.getAttribute('data-code');
       if (!code) return;
 
-      // Find the SVG (rehype-mermaid replaces the pre>code with SVG)
-      const svg = wrapper.querySelector('svg');
-      if (!svg) return;
+      // Find the image (pre-rendered SVG)
+      const img = diagram.querySelector('img');
+      if (!img) return;
 
       // Create container structure
       const container = document.createElement('div');
@@ -30,10 +30,10 @@
         <button class="toggle-btn" data-view="code">Code</button>
       `;
 
-      // Create SVG container
+      // Create SVG container (keep the img)
       const svgContainer = document.createElement('div');
       svgContainer.className = 'mermaid-svg';
-      svgContainer.appendChild(svg.cloneNode(true));
+      svgContainer.appendChild(img.cloneNode(true));
 
       // Create code container
       const codeContainer = document.createElement('div');
@@ -45,9 +45,9 @@
       container.appendChild(svgContainer);
       container.appendChild(codeContainer);
 
-      // Replace wrapper content
-      wrapper.innerHTML = '';
-      wrapper.appendChild(container);
+      // Replace diagram content
+      diagram.innerHTML = '';
+      diagram.appendChild(container);
 
       // Add toggle event listeners
       const toggleBtns = container.querySelectorAll('.toggle-btn');
@@ -130,9 +130,11 @@
     overflow-x: auto;
   }
 
-  .mermaid-svg svg {
+  .mermaid-svg svg,
+  .mermaid-svg img {
     height: auto;
     min-width: fit-content;
+    max-width: 100%;
   }
 
   .mermaid-code {

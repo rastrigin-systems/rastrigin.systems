@@ -13,20 +13,18 @@ Developers use AI coding agents daily. Claude Code, Cursor, Copilot, what—they
 So I set up a MITM proxy to intercept Claude Code’s traffic to understand what’s actually being sent to the model. What information leaves my machine?
 Claude Code is a Node.js application, which makes interception relatively straightforward—it respects standard proxy environment variables once you have the certificates configured.
 
-```mermaid
-sequenceDiagram
+<div class="mermaid-diagram" data-code="sequenceDiagram
     participant CC as Claude Code
     participant Proxy as MITM Proxy
     participant API as api.anthropic.com
-
     CC->>Proxy: HTTPS request
     Proxy->>Proxy: Decrypt & log
     Proxy->>API: Forward request
     API-->>Proxy: SSE response
     Proxy->>Proxy: Log response
-    Proxy-->>CC: Forward to CLI
-
-```
+    Proxy-->>CC: Forward to CLI">
+  <img src="/diagrams/proxy-flow.svg" alt="MITM Proxy Flow" />
+</div>
 
 The proxy sees everything in plaintext. Every request, every response, every token streamed back.
 
@@ -60,21 +58,7 @@ Every time you hit enter, Claude Code builds a request containing:
 
 Then it sends all of that to Anthropic’s servers. On every prompt. Always.
 
-```mermaid
-sequenceDiagram
-    participant You
-    participant CLI as Claude Code
-    participant Cloud as Anthropic API
-
-    You->>CLI: "fix this bug"
-    CLI->>CLI: Prepare request
-    CLI->>Cloud: POST /v1/messages
-    Cloud-->>CLI: SSE stream 1
-    Cloud-->>CLI: SSE stream 2
-    Cloud-->>CLI: SSE stream 3
-    CLI-->>You: Text appears token by token
-
-```
+![Request Flow](/diagrams/request-flow.svg)
 
 Here's the JSON structure:
 
