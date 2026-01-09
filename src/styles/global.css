@@ -53,33 +53,45 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .prose {
-  max-width: 65ch;
+  max-width: 72ch;
 }
 
-.prose h1, .prose h2, .prose h3 {
+.prose h1, .prose h2 {
   font-weight: 700;
   line-height: 1.3;
+}
+
+.prose h2 {
+  font-size: 1.5rem;
+  margin-top: 3em;
+  margin-bottom: 0.75em;
+}
+
+.prose h3 {
+  font-size: 1.15rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.78);
   margin-top: 2em;
   margin-bottom: 0.5em;
+  padding-left: 0.75em;
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
 }
 
 .prose h1 { font-size: 2rem; }
-.prose h2 { font-size: 1.5rem; }
-.prose h3 { font-size: 1.25rem; }
 
 .prose p { margin-bottom: 1.5em; }
 
 .prose a {
-  color: rgba(255, 255, 255, 0.85);
-  text-decoration: underline;
-  text-decoration-color: rgba(255, 255, 255, 0.20);
-  text-underline-offset: 3px;
-  transition: color 0.2s, text-decoration-color 0.2s;
+  color: rgba(255, 154, 60, 0.9);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 154, 60, 0.4);
+  transition: color 0.2s, border-bottom-color 0.2s;
 }
 
 .prose a:hover {
-  color: var(--color-accent-ink);
-  text-decoration-color: var(--color-accent);
+  color: #ffb066;
+  border-bottom-color: #ffb066;
 }
 
 .prose code {
@@ -92,14 +104,15 @@ h1, h2, h3, h4, h5, h6 {
 
 .prose pre {
   background-color: var(--color-bg-secondary);
-  padding: 1rem;
-  border-radius: 8px;
+  padding: 1.25rem;
+  border-radius: 10px;
   overflow-x: auto;
   margin: 1.5em 0;
+  font-size: 0.95rem;
 }
 
-.prose pre code { background: none; padding: 0; }
-.prose ul, .prose ol { margin: 1.5em 0; padding-left: 1.5em; }
+.prose pre code { background: none; padding: 0; font-size: inherit; }
+.prose ul, .prose ol { margin: 1.5em 0; padding-left: 1.1em; }
 .prose ul { list-style-type: disc; }
 .prose ol { list-style-type: decimal; }
 .prose li { margin-bottom: 0.5em; }
@@ -124,17 +137,38 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0.75em 1em;
   border-bottom: 1px solid rgba(255, 138, 42, 0.3);
   color: var(--color-accent);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .prose td {
-  padding: 0.5em 1em;
+  padding: 0.65em 1em;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--color-text-secondary);
 }
 
 .prose tr:last-child td {
   border-bottom: none;
+}
+
+/* Synthesis/takeaway sections */
+.prose .synthesis {
+  background: rgba(255, 138, 42, 0.03);
+  border-left: 2px solid rgba(255, 138, 42, 0.4);
+  padding: 1.5em 2em;
+  border-radius: 0 6px 6px 0;
+  margin: 2.5em 0;
+}
+
+.prose .synthesis h2 {
+  margin-top: 0;
+}
+
+.prose .synthesis table {
+  margin-bottom: 2em;
+}
+
+.prose .synthesis > p:first-of-type {
+  font-weight: 500;
 }
 
 /* Navigation links */

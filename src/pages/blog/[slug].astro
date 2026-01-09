@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import TableOfContents from '../../components/TableOfContents.astro';
 import MermaidToggle from '../../components/MermaidToggle.astro';
+import DevEditor from '../../components/DevEditor.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -44,6 +45,7 @@ function formatDate(dateStr: string) {
   </div>
 
   <MermaidToggle />
+  <DevEditor slug={post.id} />
 </Layout>
 
 <style>

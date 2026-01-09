@@ -1,0 +1,298 @@
+---
+interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.props;
+const isDev = import.meta.env.DEV;
+---
+
+{isDev && (
+  <div class="dev-editor" data-slug={slug}>
+    <button class="edit-toggle" type="button">
+      <span class="edit-icon">Edit</span>
+    </button>
+
+    <div class="edit-toolbar hidden">
+      <button class="save-btn" type="button">Save</button>
+      <button class="cancel-btn" type="button">Cancel</button>
+      <span class="save-status"></span>
+    </div>
+  </div>
+)}
+
+<script>
+  function initDevEditor() {
+    const editor = document.querySelector('.dev-editor') as HTMLElement;
+    if (!editor) return;
+
+    const slug = editor.dataset.slug;
+    const article = document.querySelector('article.prose') as HTMLElement;
+    const editToggle = editor.querySelector('.edit-toggle') as HTMLButtonElement;
+    const toolbar = editor.querySelector('.edit-toolbar') as HTMLElement;
+    const saveBtn = editor.querySelector('.save-btn') as HTMLButtonElement;
+    const cancelBtn = editor.querySelector('.cancel-btn') as HTMLButtonElement;
+    const status = editor.querySelector('.save-status') as HTMLElement;
+
+    if (!article || !editToggle || !toolbar || !saveBtn || !cancelBtn) return;
+
+    let originalHTML = '';
+    let isEditing = false;
+
+    const enterEditMode = () => {
+      isEditing = true;
+      originalHTML = article.innerHTML;
+      article.contentEditable = 'true';
+      article.classList.add('editing');
+      editToggle.classList.add('hidden');
+      toolbar.classList.remove('hidden');
+      status.textContent = '';
+    };
+
+    const exitEditMode = (restore = false) => {
+      isEditing = false;
+      if (restore) {
+        article.innerHTML = originalHTML;
+      }
+      article.contentEditable = 'false';
+      article.classList.remove('editing');
+      editToggle.classList.remove('hidden');
+      toolbar.classList.add('hidden');
+    };
+
+    const htmlToMarkdown = (html: string): string => {
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+
+      // Remove the header (title, excerpt, date)
+      const header = temp.querySelector('header');
+      if (header) header.remove();
+
+      // Convert back to approximate markdown
+      let md = '';
+
+      const processNode = (node: Node): string => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          return node.textContent || '';
+        }
+
+        if (node.nodeType !== Node.ELEMENT_NODE) return '';
+
+        const el = node as HTMLElement;
+        const tag = el.tagName.toLowerCase();
+        const children = Array.from(el.childNodes).map(processNode).join('');
+
+        switch (tag) {
+          case 'h2':
+            return `\n## ${children}\n`;
+          case 'h3':
+            return `\n### ${children}\n`;
+          case 'p':
+            return `\n${children}\n`;
+          case 'strong':
+          case 'b':
+            return `**${children}**`;
+          case 'em':
+          case 'i':
+            return `*${children}*`;
+          case 'code':
+            if (el.parentElement?.tagName.toLowerCase() === 'pre') {
+              return children;
+            }
+            return `\`${children}\``;
+          case 'pre':
+            const code = el.querySelector('code');
+            const lang = code?.className.match(/language-(\w+)/)?.[1] || '';
+            return `\n\`\`\`${lang}\n${code?.textContent || children}\n\`\`\`\n`;
+          case 'a':
+            const href = el.getAttribute('href') || '';
+            return `[${children}](${href})`;
+          case 'ul':
+            return `\n${children}`;
+          case 'ol':
+            return `\n${children}`;
+          case 'li':
+            return `- ${children}\n`;
+          case 'blockquote':
+            return `\n> ${children.trim().replace(/\n/g, '\n> ')}\n`;
+          case 'hr':
+            return '\n---\n';
+          case 'br':
+            return '\n';
+          case 'div':
+            if (el.classList.contains('synthesis')) {
+              return `\n<div class="synthesis">\n${children}\n</div>\n`;
+            }
+            if (el.classList.contains('mermaid-wrapper')) {
+              const mermaidCode = el.getAttribute('data-mermaid-code');
+              if (mermaidCode) {
+                return `\n\`\`\`mermaid\n${mermaidCode}\n\`\`\`\n`;
+              }
+            }
+            return children;
+          case 'table':
+            return processTable(el);
+          default:
+            return children;
+        }
+      };
+
+      const processTable = (table: HTMLElement): string => {
+        const rows = Array.from(table.querySelectorAll('tr'));
+        if (rows.length === 0) return '';
+
+        let md = '\n';
+        rows.forEach((row, i) => {
+          const cells = Array.from(row.querySelectorAll('th, td'));
+          const cellTexts = cells.map(c => c.textContent?.trim() || '');
+          md += '| ' + cellTexts.join(' | ') + ' |\n';
+          if (i === 0) {
+            md += '|' + cells.map(() => ':--').join('|') + '|\n';
+          }
+        });
+        return md;
+      };
+
+      md = processNode(temp);
+
+      // Clean up extra newlines
+      md = md.replace(/\n{3,}/g, '\n\n').trim();
+
+      return md;
+    };
+
+    const save = async () => {
+      status.textContent = 'Saving...';
+      status.className = 'save-status';
+
+      try {
+        const markdown = htmlToMarkdown(article.innerHTML);
+
+        const response = await fetch('/api/save-post', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug, content: markdown })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          status.textContent = 'Saved!';
+          status.classList.add('success');
+          setTimeout(() => exitEditMode(), 1000);
+        } else {
+          status.textContent = result.error || 'Failed to save';
+          status.classList.add('error');
+        }
+      } catch (err) {
+        status.textContent = 'Error saving';
+        status.classList.add('error');
+        console.error(err);
+      }
+    };
+
+    editToggle.addEventListener('click', enterEditMode);
+    saveBtn.addEventListener('click', save);
+    cancelBtn.addEventListener('click', () => exitEditMode(true));
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (!isEditing) return;
+      if (e.key === 'Escape') {
+        exitEditMode(true);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        save();
+      }
+    });
+  }
+
+  initDevEditor();
+  document.addEventListener('astro:page-load', initDevEditor);
+</script>
+
+<style is:global>
+  .dev-editor {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .edit-toggle {
+    background: var(--color-accent);
+    color: #000;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .edit-toggle:hover {
+    opacity: 0.9;
+  }
+
+  .edit-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    backdrop-filter: blur(8px);
+  }
+
+  .edit-toolbar button {
+    padding: 0.4rem 0.75rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .save-btn {
+    background: var(--color-accent);
+    color: #000;
+    font-weight: 500;
+  }
+
+  .cancel-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text);
+  }
+
+  .save-status {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .save-status.success {
+    color: #22c55e;
+  }
+
+  .save-status.error {
+    color: #ef4444;
+  }
+
+  .dev-editor .hidden {
+    display: none !important;
+  }
+
+  /* Edit mode styling */
+  article.prose.editing {
+    outline: 2px dashed rgba(255, 138, 42, 0.3);
+    outline-offset: 1rem;
+    min-height: 50vh;
+  }
+
+  article.prose.editing:focus {
+    outline-color: rgba(255, 138, 42, 0.5);
+  }
+</style>

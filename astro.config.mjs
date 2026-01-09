@@ -6,12 +6,14 @@ import rehypeMermaid from 'rehype-mermaid';
 
 // https://astro.build/config
 export default defineConfig({
+  output: 'hybrid',
   vite: {
     plugins: [tailwindcss()]
   },
   markdown: {
     syntaxHighlight: {
       type: 'shiki',
+      theme: 'github-dark',
       excludeLangs: ['mermaid'],
     },
     rehypePlugins: [
@@ -34,11 +36,11 @@ export default defineConfig({
           themeVariables: {
             darkMode: true,
             background: '#1c2029',
-            primaryColor: '#818cf8',
-            primaryTextColor: '#fafafa',
-            primaryBorderColor: '#27272a',
-            lineColor: '#a1a1aa',
-            secondaryColor: '#22d3ee',
+            primaryColor: '#6b7280',
+            primaryTextColor: 'rgba(255,255,255,0.85)',
+            primaryBorderColor: '#374151',
+            lineColor: '#6b7280',
+            secondaryColor: '#4b5563',
             tertiaryColor: '#13161c',
             fontFamily: 'Inter, system-ui, sans-serif',
           },
