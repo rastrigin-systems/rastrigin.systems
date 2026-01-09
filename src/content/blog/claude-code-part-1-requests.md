@@ -1,7 +1,8 @@
 ---
 title: "What Claude Code Actually Sends to the Cloud"
 date: "2026-01-09"
-excerpt: "Part 1 — The Wire"
+subtitle: "Part 1 — The Wire"
+excerpt: "An inspection of Claude Code's network requests, system prompt, and context handling by intercepting real traffic."
 ---
 
 I built a proxy to see what Claude Code sends to the cloud. The answer: far more than most developers realize — and far more than the UI suggests. Your code, your git history, your project instructions—packaged into requests so large I thought my logging was broken.

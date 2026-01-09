@@ -30,8 +30,8 @@ function formatDate(dateStr: string) {
     <article class="prose">
       <header class="mb-8">
         <h1 class="text-3xl font-bold mb-2">{post.data.title}</h1>
-        {post.data.excerpt && (
-          <p class="text-lg text-[var(--color-text-muted)] mt-1 mb-3">{post.data.excerpt}</p>
+        {post.data.subtitle && (
+          <p class="text-lg text-[var(--color-text-muted)] mt-1 mb-3">{post.data.subtitle}</p>
         )}
         <time class="text-[var(--color-text-muted)] text-sm">{formatDate(post.data.date)}</time>
       </header>
