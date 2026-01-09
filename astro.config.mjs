@@ -6,7 +6,6 @@ import rehypeMermaid from 'rehype-mermaid';
 
 // https://astro.build/config
 export default defineConfig({
-  output: 'hybrid',
   vite: {
     plugins: [tailwindcss()]
   },
