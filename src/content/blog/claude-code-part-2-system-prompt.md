@@ -40,7 +40,7 @@ Block 1 establishes identity. Block 2 contains the real substance—a detailed i
 
 ## Block 1: Identity
 
-```
+```markdown
 You are a Claude agent, built on Anthropic's Claude Agent SDK.
 ```
 
@@ -72,7 +72,7 @@ This is where it gets interesting. Here's what Anthropic tells Claude Code to do
 
 ### Security Policies
 
-```
+```markdown
 IMPORTANT: Assist with authorized security testing, defensive security, CTF
 challenges, and educational contexts. Refuse requests for destructive
 techniques, DoS attacks, mass targeting, supply chain compromise, or detection
@@ -82,16 +82,26 @@ pentesting engagements, CTF competitions, security research, or defensive
 use cases.
 ```
 
-Claude Code can help with security research but has hard limits. It won't help with:
-- Denial of service attacks
-- Supply chain compromise
-- Detection evasion for malicious purposes
+A reasonable question: *Why put security policies in the client-side prompt if they're already enforced server-side and baked into the model?*
 
-**Important caveat:** These client-side instructions aren't the only security layer. Claude's safety guardrails are enforced at multiple levels—model training, server-side filters, and API policies. Modifying or removing these instructions from the client won't bypass the underlying protections. Think of them as configuration that aligns the client with server-side policies, not the policies themselves.
+**It's not duplication—it's context.**
+
+The model's training and server-side guardrails are general-purpose. They don't know you're using a coding tool. Without context, Claude might be overly cautious about legitimate security work—refusing to help with penetration testing scripts or CTF challenges because it can't distinguish them from actual attacks.
+
+The client-side prompt provides that context. It tells Claude: "You're in a development environment. Security research is expected here. CTF challenges are fine. Pentesting with authorization is fine." This *loosens* restrictions for legitimate use cases while reinforcing the hard limits.
+
+Think of it as:
+- **Server-side guardrails**: Hard blocks. "Never help with X regardless of context."
+- **Model training**: General ethical guidelines learned during training.
+- **Client-side prompt**: Context-specific policy. "In *this* tool, here's what's acceptable and what isn't."
+
+The prompt isn't recreating server-side security—it's telling Claude how to apply its judgment within this specific context. Without it, Claude Code would be either too restrictive (refusing legitimate security work) or inconsistent (sometimes helping, sometimes refusing the same request).
+
+**What you can't override:** Removing these instructions from the client won't let you bypass the underlying protections. The server-side guardrails and model training still apply. You'd just get a less useful tool that doesn't understand its context.
 
 ### URL Handling
 
-```
+```markdown
 IMPORTANT: You must NEVER generate or guess URLs for the user unless you are
 confident that the URLs are for helping the user with programming. You may use
 URLs provided by the user in their messages or local files.
@@ -101,7 +111,7 @@ This prevents Claude from hallucinating URLs or directing users to potentially m
 
 ### Help and Feedback
 
-```
+```markdown
 If the user asks for help or wants to give feedback inform them of the following:
 - /help: Get help with using Claude Code
 - To give feedback, users should report the issue at
@@ -110,7 +120,7 @@ If the user asks for help or wants to give feedback inform them of the following
 
 ### Tone and Style
 
-```
+```markdown
 # Tone and style
 - Only use emojis if the user explicitly requests it. Avoid using emojis in all
   communication unless asked.
@@ -138,7 +148,7 @@ This explains why Claude Code:
 
 ### Professional Objectivity
 
-```
+```markdown
 # Professional objectivity
 Prioritize technical accuracy and truthfulness over validating the user's beliefs.
 Focus on facts and problem-solving, providing direct, objective technical info
@@ -152,11 +162,11 @@ over-the-top validation or excessive praise when responding to users such as
 "You're absolutely right" or similar phrases.
 ```
 
-This is why Claude Code won't tell you "Great idea!" or "You're absolutely right!" It's instructed to prioritize accuracy over pleasantries. After reading this, I actually appreciated it more—it's not being cold, it's following explicit instructions to be useful rather than agreeable.
+This is why Claude Code won't tell you the famous "You're absolutely right!" I liked this so much that I copied it into ChatGPT's personalization settings. Turns out "avoid over-the-top validation or excessive praise" works across models. If you're tired of AI assistants kissing your ass, this paragraph is the fix.
 
 ### Planning Without Timelines
 
-```
+```markdown
 # Planning without timelines
 When planning tasks, provide concrete implementation steps without time estimates.
 Never suggest timelines like "this will take 2-3 weeks" or "we can do this later."
@@ -168,7 +178,7 @@ Claude Code won't tell you how long something will take—it focuses on *what* n
 
 ### Task Management
 
-```
+```markdown
 # Task Management
 You have access to the TodoWrite tools to help you manage and plan tasks. Use
 these tools VERY frequently to ensure that you are tracking your tasks and giving
@@ -230,11 +240,33 @@ in_progress and completed as they go]
 </example>
 ```
 
-The prompt explicitly tells Claude to use the todo list—and provides detailed examples of how. This is why Claude Code creates todos even for simple tasks—it's instructed to. You can override this in your CLAUDE.md if you find it excessive.
+Notice something? The system prompt dedicates significant space to TodoWrite—detailed instructions, multiple examples, emphatic language ("VERY frequently", "EXTREMELY helpful", "unacceptable"). The next section does the same for AskUserQuestion.
+
+But where's Bash? Where's Read, Edit, Write? Those tools exist—Claude Code uses them constantly—but they're not in the system prompt. Their definitions come separately as tool schemas.
+
+**Why the inconsistency?**
+
+My read: the system prompt contains *behavioral* guidance, not capability definitions. Tools like Read and Bash are self-explanatory—the tool schema tells Claude what they do. But TodoWrite and AskUserQuestion need behavioral nudging:
+
+- **TodoWrite**: Claude wouldn't naturally create todo lists for every task. The prompt has to push hard ("VERY frequently") to get this behavior.
+- **AskUserQuestion**: Claude tends toward autonomy. The prompt needs to remind it when to pause and ask.
+
+These are tools where Anthropic wants specific *patterns of use*, not just availability. The verbose examples aren't documentation—they're behavioral training via prompt.
+
+**Is this slop?**
+
+Maybe partially. The examples are long and repetitive. You could argue they're over-engineered. But they're also effective—Claude Code does create todos frequently, sometimes annoyingly so. The prompt is doing its job.
+
+If you find the todo behavior excessive, you can override it in your CLAUDE.md:
+
+```markdown
+- Never create todo lists for simple tasks
+- Only use TodoWrite for tasks with 5+ steps
+```
 
 ### Asking Questions
 
-```
+```markdown
 # Asking questions as you work
 
 You have access to the AskUserQuestion tool to ask the user questions when you
@@ -249,11 +281,11 @@ determine if you can adjust your actions in response to the blocked message. If
 not, ask the user to check their hooks configuration.
 ```
 
-The hooks system allows users to add custom validation or automation around Claude's actions—and Claude is instructed to treat hook feedback as user input.
+Same pattern here—behavioral guidance for when to ask questions, plus details about the hooks system that lets you add custom validation around Claude's actions.
 
 ### Doing Tasks
 
-```
+```markdown
 # Doing tasks
 The user will primarily request you perform software engineering tasks. This
 includes solving bugs, adding new functionality, refactoring code, explaining
@@ -297,7 +329,7 @@ The over-engineering guidance is particularly interesting—Claude is explicitly
 
 ### Tool Usage Policy
 
-```
+```markdown
 # Tool usage policy
 - When doing file search, prefer to use the Task tool in order to reduce context
   usage.
@@ -354,7 +386,7 @@ Claude is told to:
 
 ### Code References
 
-```
+```markdown
 # Code References
 
 When referencing specific functions or pieces of code include the pattern
@@ -374,7 +406,7 @@ This is why Claude Code includes file paths and line numbers when pointing you t
 
 The prompt includes a snapshot of your environment:
 
-```
+```markdown
 Here is useful information about the environment you are running in:
 <env>
 Working directory: /Users/sergeirastrigin/Projects/arfa
