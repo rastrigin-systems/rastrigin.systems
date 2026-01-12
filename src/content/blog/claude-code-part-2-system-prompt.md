@@ -3,14 +3,11 @@ title: "The System Prompt"
 date: "2026-01-12"
 subtitle: "Part 2 — The Full Instructions, Exposed"
 excerpt: "What Claude Code is told before you type a single word—the complete instructions that shape every response."
-draft: true
 ---
 
 In [Part 1](/blog/claude-code-part-1-requests), I intercepted Claude Code's API traffic. I expected to find routine HTTP calls. What I found instead was something far more interesting: the complete system prompt—every instruction Anthropic gives Claude before you even say hello.
 
-Reading through it felt like finding a secret document. Not because it's hidden maliciously (it's right there in plain JSON), but because you're seeing the full "operating manual" for an AI agent that millions use daily. Every quirk, every behavior, every "why does it do that?"—it's all spelled out in these instructions.
-
-This article isn't about how big the prompt is. It's about what's *in* it, and why that matters for anyone using Claude Code seriously.
+Reading through it felt like finding a secret document as you're seeing the full "operating manual" for an AI agent that millions use daily. Every quirk, every behavior, every "why does it do that?"—it's all spelled out in these instructions.
 
 ---
 
@@ -569,7 +566,7 @@ These instructions will override the defaults from the system prompt. The overri
 | Over-engineering rules | Diagnostics and warnings |
 | Tool usage patterns | File selection context |
 
-Reading the full system prompt changed how I use Claude Code. Every behavior I'd wondered about—why it's so terse, why it creates todo lists constantly, why it won't estimate timelines—has an explicit instruction behind it.
+Reading the full system prompt clarified *why* Claude Code behaves the way it does. Every quirk has a documented reason.  
 
 The system prompt is versioned software. Behaviors you rely on might change with Claude Code updates—not because the model changed, but because the instructions did. Your CLAUDE.md can override almost any default, and now you know exactly what defaults exist to override.
 
@@ -579,8 +576,6 @@ Claude Code isn't magic. It's Claude plus a detailed prompt plus runtime injecti
 
 ## Next Up
 
-The system prompt tells Claude *how* to behave. But *what* can it actually do? The answer is in the tools—40+ function definitions that let Claude read files, run commands, spawn subagents, and more.
-
-[Part 3: The Tools →](/blog/claude-code-part-3-tools)
+The system prompt tells Claude *how* to behave. But *what* can it actually do and how exactly does it use those tools? That's the focus of [Part 3: The Tools](/blog/claude-code-part-3-tools).
 
 [← Back to Part 1](/blog/claude-code-part-1-requests)
