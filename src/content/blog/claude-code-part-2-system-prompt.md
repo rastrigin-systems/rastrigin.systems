@@ -3,6 +3,7 @@ title: "The System Prompt"
 date: "2026-01-12"
 subtitle: "Part 2 — The Full Instructions, Exposed"
 excerpt: "What Claude Code is told before you type a single word—the complete instructions that shape every response."
+draft: true
 ---
 
 In [Part 1](/blog/claude-code-part-1-requests), I intercepted Claude Code's API traffic. I expected to find routine HTTP calls. What I found instead was something far more interesting: the complete system prompt—every instruction Anthropic gives Claude before you even say hello.
