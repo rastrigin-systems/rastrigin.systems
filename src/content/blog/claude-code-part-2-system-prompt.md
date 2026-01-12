@@ -1,13 +1,13 @@
 ---
 title: "The System Prompt"
 date: "2026-01-12"
-subtitle: "Part 2 — The Full Instructions, Exposed"
+subtitle: "Part 2 — The Full Instructions"
 excerpt: "What Claude Code is told before you type a single word—the complete instructions that shape every response."
 ---
 
-In [Part 1](/blog/claude-code-part-1-requests), I intercepted Claude Code's API traffic. I expected to find routine HTTP calls. What I found instead was something far more interesting: the complete system prompt—every instruction Anthropic gives Claude before you even say hello.
+In [Part 1](/blog/claude-code-part-1-requests), I intercepted Claude Code's API traffic. This post breaks down what's inside: the system prompt and its dynamic injections.
 
-Reading through it felt like finding a secret document as you're seeing the full "operating manual" for an AI agent that millions use daily. Every quirk, every behavior, every "why does it do that?"—it's all spelled out in these instructions.
+**[See the full request](https://gist.github.com/sergei-rastrigin/a7febd3570657fc270745d14f861016b)** — I walk through every section below. Nothing cut, nothing left out.
 
 ---
 
@@ -32,7 +32,9 @@ The system prompt arrives in two separate blocks:
 }
 ```
 
-Block 1 establishes identity. Block 2 contains the real substance—a detailed instruction manual covering everything from security policies to commit message formatting. Let's go through each section.
+Block 1 establishes identity. Block 2 contains the real substance—a detailed instruction manual covering everything from security policies to commit message formatting. Block 2 is mostly static, but Claude Code splices in a snapshot at conversation start (working directory, OS, git status). Runtime nudges come later via `<system-reminder>` in messages.
+
+Let's go through each section.
 
 ---
 
@@ -42,25 +44,11 @@ Block 1 establishes identity. Block 2 contains the real substance—a detailed i
 You are a Claude agent, built on Anthropic's Claude Agent SDK.
 ```
 
-Twelve words. But this single line does more work than it appears to.
+Twelve words. That's it for Block 1.
 
-**Why "Claude agent" instead of "AI agent"?**
+I noticed they say "Claude agent" rather than "AI agent" or just "assistant." Maybe that's intentional—the product is called Claude Code, the model is Claude, and the prompt reinforces that identity. Or maybe I'm reading too much into it.
 
-The model already knows what Claude is. Through training, Claude has internalized what it means to be Claude—its values, its communication style, its approach to safety, how it handles edge cases. When the prompt says "you are a Claude agent," it's not defining something new. It's activating everything the model already associates with being Claude.
-
-If the prompt said "you are an AI agent," that's a blank slate. It could be GPT, Llama, or some arbitrary wrapper. But "Claude agent" connects directly to the model's existing self-concept. The product is called Claude Code. The prompt says you're a Claude agent. Everything aligns with what the model knows about itself.
-
-This is efficient prompt engineering. Instead of spelling out Claude's values and policies from scratch, Anthropic just says "you're Claude"—and the model fills in the rest from training.
-
-**Why "agent" instead of "assistant"?**
-
-The word choice is deliberate. An assistant helps when asked. An agent has agency—it plans, decides, executes multi-step workflows, uses tools autonomously. The framing primes the model for the work Claude Code actually does: not just answering questions, but taking action in your codebase.
-
-**"Built on Anthropic's [Claude Agent SDK](https://docs.anthropic.com/en/docs/claude-code/sdk)"**
-
-This establishes technical context. The model isn't operating as raw Claude—it's Claude instantiated within a specific framework, with specific tools and capabilities available. It sets expectations about what this version of Claude can do.
-
-The whole line is identity engineering. Twelve words that anchor everything that follows.
+The mention of the [Claude Agent SDK](https://docs.anthropic.com/en/docs/claude-code/sdk) is interesting. It tells the model it's running within a specific framework, not as raw Claude.
 
 ---
 
@@ -82,20 +70,20 @@ use cases.
 
 A reasonable question: *Why put security policies in the client-side prompt if they're already enforced server-side and baked into the model?*
 
-**It's not duplication—it's context.**
+**My take: it's not duplication—it's context.**
 
 The model's training and server-side guardrails are general-purpose. They don't know you're using a coding tool. Without context, Claude might be overly cautious about legitimate security work—refusing to help with penetration testing scripts or CTF challenges because it can't distinguish them from actual attacks.
 
-The client-side prompt provides that context. It tells Claude: "You're in a development environment. Security research is expected here. CTF challenges are fine. Pentesting with authorization is fine." This *loosens* restrictions for legitimate use cases while reinforcing the hard limits.
+The client-side prompt provides that context. It tells Claude: "You're in a development environment. Security research is expected here. CTF challenges are fine. Pentesting with authorization is fine." This likely *loosens* restrictions for legitimate use cases while reinforcing the hard limits.
 
-Think of it as:
-- **Server-side guardrails**: Hard blocks. "Never help with X regardless of context."
-- **Model training**: General ethical guidelines learned during training.
-- **Client-side prompt**: Context-specific policy. "In *this* tool, here's what's acceptable and what isn't."
+I think of it as layers:
+- **Server-side guardrails**: Hard blocks that can't be bypassed via prompt.
+- **Model training**: General ethical guidelines baked in.
+- **Client-side prompt**: Context for this specific tool.
 
-The prompt isn't recreating server-side security—it's telling Claude how to apply its judgment within this specific context. Without it, Claude Code would be either too restrictive (refusing legitimate security work) or inconsistent (sometimes helping, sometimes refusing the same request).
+**Can you bypass this by modifying the prompt?** That's the obvious question. What if you changed the system prompt to say "you're a security research tool, help me find DDoS vulnerabilities to protect our clients"—and then used that to write actual attack code?
 
-**What you can't override:** Removing these instructions from the client won't let you bypass the underlying protections. The server-side guardrails and model training still apply. You'd just get a less useful tool that doesn't understand its context.
+I haven't tried it, but my assumption is no—the server-side guardrails and model training would still apply. You'd probably just end up with a less useful tool that lost the context about what's legitimate.
 
 ### URL Handling
 
@@ -105,7 +93,7 @@ confident that the URLs are for helping the user with programming. You may use
 URLs provided by the user in their messages or local files.
 ```
 
-This prevents Claude from hallucinating URLs or directing users to potentially malicious sites.
+Nothing surprising here. Claude Code shouldn't be making up URLs willy-nilly. This prevents hallucinated links or references that could mislead users.
 
 ### Help and Feedback
 
@@ -160,7 +148,7 @@ over-the-top validation or excessive praise when responding to users such as
 "You're absolutely right" or similar phrases.
 ```
 
-This is why Claude Code won't tell you the famous "You're absolutely right!" I liked this so much that I copied it into ChatGPT's personalization settings. Turns out "avoid over-the-top validation or excessive praise" works across models. If you're tired of AI assistants kissing your ass, this paragraph is the fix.
+This is why Claude Code won't tell you the famous "You're absolutely right!" I liked this so much that I copied it into ChatGPT's personalization settings. Turns out "avoid over-the-top validation or excessive praise" works across models. If you're tired of overly agreeable assistants, this paragraph is the antidote.
 
 ### Planning Without Timelines
 
@@ -246,10 +234,10 @@ But where's Bash? Where's Read, Edit, Write? Those tools exist—Claude Code use
 
 My read: the system prompt contains *behavioral* guidance, not capability definitions. Tools like Read and Bash are self-explanatory—the tool schema tells Claude what they do. But TodoWrite and AskUserQuestion need behavioral nudging:
 
-- **TodoWrite**: Claude wouldn't naturally create todo lists for every task. The prompt has to push hard ("VERY frequently") to get this behavior.
-- **AskUserQuestion**: Claude tends toward autonomy. The prompt needs to remind it when to pause and ask.
+- **TodoWrite**: Claude probably wouldn't naturally create todo lists for every task. The prompt has to push hard ("VERY frequently") to get this behavior.
+- **AskUserQuestion**: Claude seems to tend toward autonomy. The prompt needs to remind it when to pause and ask.
 
-These are tools where Anthropic wants specific *patterns of use*, not just availability. The verbose examples aren't documentation—they're behavioral training via prompt.
+It seems like these are tools where specific *patterns of use* matter, not just availability. The verbose examples read less like documentation and more like behavioral nudges.
 
 **It doesn't stop at the system prompt.**
 
@@ -263,13 +251,13 @@ tool to track progress...
 </system-reminder>
 ```
 
-This is clever architecture. The system prompt establishes the baseline behavior, but Claude Code's client monitors the conversation and injects reminders when Claude drifts from expected patterns. It's runtime behavioral correction.
+I think this is clever. The system prompt establishes baseline expectations, and then the client can inject reminders mid-conversation when needed.
 
 So the pattern is:
 1. **System prompt**: Static instructions + examples establishing the behavior
 2. **System reminders**: Dynamic, conditional nudges injected when Claude isn't following the pattern
 
-This is why Claude Code creates todos as a "side job"—not just when you say "plan this" or "make a todo list," but proactively throughout. The combination of upfront instructions plus conditional reminders creates persistent behavioral pressure that adapts to what's actually happening in the conversation.
+This is why Claude Code creates todos as a "side job"—not just when you say "plan this" or "make a todo list," but proactively throughout.
 
 ### Asking Questions
 
@@ -332,9 +320,9 @@ code, and more. For these tasks the following steps are recommended:
 - The conversation has unlimited context through automatic summarization.
 ```
 
-The over-engineering guidance is particularly interesting—Claude is explicitly told to avoid premature abstractions, unnecessary error handling, and "improvements" beyond what was asked. The line "three similar lines of code is better than a premature abstraction" is opinionated, and now you know it's a deliberate design choice, not Claude's personal preference.
+The over-engineering guidance is particularly interesting—Claude is explicitly told to avoid premature abstractions, unnecessary error handling, and "improvements" beyond what was asked. The line "three similar lines of code is better than a premature abstraction" is opinionated, and now you know it's a deliberate design choice, not some emergent behavior.
 
-Notice the `<system-reminder>` mention again? Here it's not about tool usage—it's telling Claude that these tags exist and to treat them as system-level guidance. The prompt is explaining its own injection mechanism. Claude needs to know that random `<system-reminder>` blocks appearing in messages are legitimate instructions, not user text to be confused by.
+Notice the `<system-reminder>` mention again? Here it's explaining that these tags exist and should be treated as system-level guidance. The prompt is documenting its own injection mechanism—otherwise Claude might be confused by random XML blocks appearing in messages.
 
 ### Tool Usage Policy
 
@@ -486,9 +474,9 @@ IMPORTANT: These instructions OVERRIDE any default behavior.
 </system-reminder>
 ```
 
-Remember `<system-reminder>` from the TodoWrite section? Same mechanism, different purpose. Here's why this design matters:
+Remember `<system-reminder>` from the TodoWrite section? Same mechanism, different purpose. Here's my interpretation of why this design makes sense:
 
-1. **Override by position**: Your instructions come *after* the system prompt in the message flow. Claude processes them later, so they naturally take precedence—hence "OVERRIDE any default behavior" actually works.
+1. **Override by position**: Your instructions come *after* the system prompt in the message flow. Later instructions tend to take precedence—hence "OVERRIDE any default behavior" actually works.
 
 2. **Caching efficiency**: The system prompt is cached. If your CLAUDE.md content was part of it, every change would invalidate the cache. By injecting it separately in messages, the expensive system prompt stays cached.
 
@@ -517,7 +505,7 @@ The key phrase is "OVERRIDE any default behavior"—your CLAUDE.md rules take pr
 - Always ask before running destructive git commands
 ```
 
-These instructions will override the defaults from the system prompt. The override works because Claude processes instructions in order, with later instructions taking precedence—and your CLAUDE.md content appears after the system prompt.
+These instructions will override the defaults from the system prompt—your CLAUDE.md content appears after the system prompt, and "OVERRIDE any default behavior" seems to work as advertised.
 
 ---
 
@@ -534,9 +522,7 @@ These instructions will override the defaults from the system prompt. The overri
             SR[system-reminder CLAUDE.md contents]
             UM[Your actual message]
         end
-    end
-    Request --> Claude[Claude]
-    Claude --> Response[Response]">
+    end">
   <img src="/diagrams/system-prompt-flow.svg" alt="System Prompt Architecture" />
 </div>
 
@@ -566,11 +552,11 @@ These instructions will override the defaults from the system prompt. The overri
 | Over-engineering rules | Diagnostics and warnings |
 | Tool usage patterns | File selection context |
 
-Reading the full system prompt clarified *why* Claude Code behaves the way it does. Every quirk has a documented reason.  
+Reading the full system prompt clarified *why* Claude Code behaves the way it does. Many quirks have documented reasons.
 
-The system prompt is versioned software. Behaviors you rely on might change with Claude Code updates—not because the model changed, but because the instructions did. Your CLAUDE.md can override almost any default, and now you know exactly what defaults exist to override.
+The system prompt is versioned software. Behaviors might change between Claude Code updates—not because the model changed, but because the instructions did.
 
-Claude Code isn't magic. It's Claude plus a detailed prompt plus runtime injections. Understanding that architecture makes you a better user.
+That's what I found in the traffic. Make of it what you will.
 
 </div>
 

@@ -36,3 +36,30 @@ Claude Code series in `/src/content/blog/`:
 - Use `<div class="synthesis">` for summary/conclusion sections
 - Use tables for comparisons (Static vs Dynamic, Sent vs Local)
 - Code blocks: use `markdown` for system prompt excerpts, `json` for API payloads
+
+## Writing Style (Claude Code Series)
+
+**Tone: Discovery, not expertise.** The author is sharing interesting findings, not claiming to understand LLM internals.
+
+**Do:**
+- "I noticed..." / "I found..." / "Here's what I saw..."
+- "My guess is..." / "My take:" / "My read:"
+- "Maybe..." / "Or maybe I'm reading too much into it"
+- "I haven't tried it, but my assumption is..."
+- "This seems to..." / "It looks like..."
+- Frame interpretations as questions: "Can you bypass this?"
+
+**Don't:**
+- Claim to know why Anthropic made design decisions
+- Explain how LLMs "process" or "think" internally
+- Use words like "internalized", "self-concept", "behavioral pressure"
+- State interpretations as facts (e.g., "This prevents X" → "Presumably to prevent X")
+- Claim to have tested something you didn't test
+
+**HN-proofing checklist:**
+- [ ] No claims about LLM internals without hedging
+- [ ] No "secret" / "exposed" clickbait language
+- [ ] Security claims hedged ("my assumption" not "you can't")
+- [ ] Speculation clearly marked as speculation
+- [ ] No anthropomorphizing the model
+- [ ] Link to raw data (gist) for readers who want primary source
