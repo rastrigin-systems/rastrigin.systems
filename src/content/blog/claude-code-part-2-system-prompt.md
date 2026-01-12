@@ -253,16 +253,25 @@ My read: the system prompt contains *behavioral* guidance, not capability defini
 
 These are tools where Anthropic wants specific *patterns of use*, not just availability. The verbose examples aren't documentation—they're behavioral training via prompt.
 
-**Is this slop?**
+**It doesn't stop at the system prompt.**
 
-Maybe partially. The examples are long and repetitive. You could argue they're over-engineered. But they're also effective—Claude Code does create todos frequently, sometimes annoyingly so. The prompt is doing its job.
+There's a second layer: `<system-reminder>` tags get dynamically injected into user messages throughout the conversation. These aren't static—they're conditional, triggered when certain criteria are met (like "TodoWrite hasn't been called for N turns"):
 
-If you find the todo behavior excessive, you can override it in your CLAUDE.md:
-
-```markdown
-- Never create todo lists for simple tasks
-- Only use TodoWrite for tasks with 5+ steps
+```xml
+<system-reminder>
+The TodoWrite tool hasn't been used recently. If you're working on tasks
+that would benefit from tracking progress, consider using the TodoWrite
+tool to track progress...
+</system-reminder>
 ```
+
+This is clever architecture. The system prompt establishes the baseline behavior, but Claude Code's client monitors the conversation and injects reminders when Claude drifts from expected patterns. It's runtime behavioral correction.
+
+So the pattern is:
+1. **System prompt**: Static instructions + examples establishing the behavior
+2. **System reminders**: Dynamic, conditional nudges injected when Claude isn't following the pattern
+
+This is why Claude Code creates todos as a "side job"—not just when you say "plan this" or "make a todo list," but proactively throughout. The combination of upfront instructions plus conditional reminders creates persistent behavioral pressure that adapts to what's actually happening in the conversation.
 
 ### Asking Questions
 
@@ -327,6 +336,8 @@ code, and more. For these tasks the following steps are recommended:
 
 The over-engineering guidance is particularly interesting—Claude is explicitly told to avoid premature abstractions, unnecessary error handling, and "improvements" beyond what was asked. The line "three similar lines of code is better than a premature abstraction" is opinionated, and now you know it's a deliberate design choice, not Claude's personal preference.
 
+Notice the `<system-reminder>` mention again? Here it's not about tool usage—it's telling Claude that these tags exist and to treat them as system-level guidance. The prompt is explaining its own injection mechanism. Claude needs to know that random `<system-reminder>` blocks appearing in messages are legitimate instructions, not user text to be confused by.
+
 ### Tool Usage Policy
 
 ```markdown
@@ -382,7 +393,7 @@ Claude is told to:
 - Use Read/Edit/Write tools instead of cat/sed/echo
 - Run tools in parallel when possible
 
-**Power user tip:** The `subagent_type` parameter accepts custom values. You can define your own specialized agents in your CLAUDE.md with specific instructions, then reference them with `subagent_type=your-custom-agent`. This opens up possibilities for project-specific workflows—like a "reviewer" agent for code review or a "migrator" agent for database changes.
+**Power user tip:** You can create your own custom agents and use similar instructions in your CLAUDE.md to get the same consistent behavior for project-specific workflows—like a "reviewer" agent for code review.
 
 ### Code References
 
@@ -404,7 +415,7 @@ This is why Claude Code includes file paths and line numbers when pointing you t
 
 ### Environment Information
 
-The prompt includes a snapshot of your environment:
+This is another dynamic part. The CLI gathers information about your environment and injects it into the system prompt at conversation start:
 
 ```markdown
 Here is useful information about the environment you are running in:
@@ -446,14 +457,14 @@ fe10e10 new version of article 1
 6eb12da chore(web): Remove Playwright e2e tests (#415)
 ```
 
-This is how Claude knows:
-- Your OS and platform
-- Current git branch and recent commits
-- Today's date (for time-aware responses)
-- Working directory path
-- Which model it's running as (and what other models exist)
+This is how Claude knows about your project *without running any tools*:
+- Which files are modified or untracked (git status)
+- Recent commit history and messages
+- Current branch and main branch name
+- Your OS, platform, and working directory
+- Today's date and which model it's running as
 
-This is why Claude can reference your branch name or recent commits without you mentioning them—it's given a snapshot at conversation start.
+This context comes "for free" at conversation start. When Claude references your branch name, mentions a recent commit, or knows which files you've been working on—it didn't run `git status`. The CLI already gathered that information and injected it into the prompt.
 
 ---
 
@@ -476,6 +487,14 @@ Contents of /Users/developer/Projects/myproject/CLAUDE.md (project instructions)
 IMPORTANT: These instructions OVERRIDE any default behavior.
 </system-reminder>
 ```
+
+Remember `<system-reminder>` from the TodoWrite section? Same mechanism, different purpose. Here's why this design matters:
+
+1. **Override by position**: Your instructions come *after* the system prompt in the message flow. Claude processes them later, so they naturally take precedence—hence "OVERRIDE any default behavior" actually works.
+
+2. **Caching efficiency**: The system prompt is cached. If your CLAUDE.md content was part of it, every change would invalidate the cache. By injecting it separately in messages, the expensive system prompt stays cached.
+
+3. **Consistent injection pattern**: TodoWrite reminders, diagnostics, CLAUDE.md—all use the same `<system-reminder>` mechanism. One pattern for all dynamic content.
 
 **Two levels of customization:**
 
@@ -506,23 +525,22 @@ These instructions will override the defaults from the system prompt. The overri
 
 ## How It All Fits Together
 
-```mermaid
-flowchart LR
-    subgraph Request["API Request to Claude"]
+<div class="mermaid-diagram" data-code="flowchart LR
+    subgraph Request[API Request to Claude]
         direction TB
-        subgraph SP["system (cached)"]
-            B1["Identity"]
-            B2["Instructions"]
+        subgraph SP[system cached]
+            B1[Identity]
+            B2[Instructions]
         end
-        subgraph Msg["messages[0]"]
-            SR["&lt;system-reminder&gt;<br/>CLAUDE.md contents"]
-            UM["Your actual message"]
+        subgraph Msg[messages]
+            SR[system-reminder CLAUDE.md contents]
+            UM[Your actual message]
         end
     end
-
-    Request --> Claude["Claude"]
-    Claude --> Response["Response"]
-```
+    Request --> Claude[Claude]
+    Claude --> Response[Response]">
+  <img src="/diagrams/system-prompt-flow.svg" alt="System Prompt Architecture" />
+</div>
 
 **What Claude sees (in order):**
 
@@ -538,31 +556,30 @@ flowchart LR
 2. System prompt instructions
 3. Claude's base training
 
----
+<div class="synthesis">
 
-## Why This Matters
+## What This Means
+
+| Static (System Prompt) | Dynamic (Injected per message) |
+|:--|:--|
+| Identity ("You are a Claude agent") | Environment info (git status, branch, OS) |
+| Security policies | CLAUDE.md contents |
+| Tone and style guidelines | TodoWrite reminders |
+| Over-engineering rules | Diagnostics and warnings |
+| Tool usage patterns | File selection context |
 
 Reading the full system prompt changed how I use Claude Code. Every behavior I'd wondered about—why it's so terse, why it creates todo lists constantly, why it won't estimate timelines—has an explicit instruction behind it.
 
-**Understanding beats guessing:** Instead of wondering "why did Claude do that?", you can look at the instructions. The behavior isn't arbitrary; it's designed.
+The system prompt is versioned software. Behaviors you rely on might change with Claude Code updates—not because the model changed, but because the instructions did. Your CLAUDE.md can override almost any default, and now you know exactly what defaults exist to override.
 
-**Customization is powerful:** Your CLAUDE.md can override almost any default. Don't like the commit message format? Change it. Find the todo lists excessive? Turn them off. The system prompt shows you exactly what defaults exist to override.
+Claude Code isn't magic. It's Claude plus a detailed prompt plus runtime injections. Understanding that architecture makes you a better user.
 
-**It's versioned software:** The system prompt changes with Claude Code releases. Behaviors you rely on might change with updates—not because the model changed, but because the instructions did.
+</div>
 
-**Transparency matters:** Seeing these instructions demystifies the tool. Claude Code isn't magic—it's Claude plus a detailed prompt. Understanding that prompt makes you a better user.
+## Next Up
 
----
+The system prompt tells Claude *how* to behave. But *what* can it actually do? The answer is in the tools—40+ function definitions that let Claude read files, run commands, spawn subagents, and more.
 
-## The Full System Prompt
-
-I've published the complete, unabridged system prompt so you can read it yourself. Every instruction, every example, every policy—exactly as Claude Code receives it.
-
-[View the full system prompt →](./claude-code-request-reference.md#1-system-prompt-blocks)
-
----
-
-*Next: [Part 3: The Tools](./claude-code-part-3-tools.md) — How Claude decides to read files, run commands, and call subagents.*
-
+[Part 3: The Tools →](/blog/claude-code-part-3-tools)
 
 [← Back to Part 1](/blog/claude-code-part-1-requests)
