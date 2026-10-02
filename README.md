@@ -1,61 +1,46 @@
 # rastrigin.systems
 
-Personal site built with Astro and Tailwind CSS.
+The company site of Rastrigin Systems Ltd: one static page that says what the
+company is, what it owns, how it works, and where it is registered. Built with
+Astro 5 and plain CSS, deployed as a Cloudflare Worker that serves `dist/` as
+static assets (`wrangler.jsonc`, `assets.directory = ./dist`). It is a Worker,
+not a Pages project.
 
-## Development
-
-```bash
-bun install
-bun dev
-```
-
-Site runs at `http://localhost:4321`
-
-## Deployment
-
-Deployed to Cloudflare Pages. Pushes to `main` trigger automatic deploys.
+## Develop
 
 ```bash
-git add -A && git commit -m "Your message" && git push
+npm install
+npm run dev        # http://localhost:4321
 ```
 
-## Adding Blog Posts
+## Deploy
 
-Create a markdown file in `src/content/blog/`:
-
-```markdown
----
-title: "Your Post Title"
-date: "2024-12-30"
-excerpt: "Brief description shown on homepage."
----
-
-Your content here. Supports **markdown** formatting.
-
-## Headings work
-
-So do code blocks:
-
-```typescript
-const x = 1;
-```
+```bash
+npm run build && npx wrangler deploy
 ```
 
-That's it. The post automatically appears on the homepage, sorted by date.
+There is no deploy on push. `wrangler deploy` uploads `dist/` under the Worker
+named in `wrangler.jsonc`.
 
-## Project Structure
+## Layout
 
 ```
 src/
-├── content/
-│   └── blog/             # Markdown blog posts go here
-├── layouts/
-│   └── Layout.astro      # Base layout with header/footer
-├── pages/
-│   ├── index.astro       # Homepage (auto-lists posts)
-│   ├── about.astro       # About page
-│   └── blog/
-│       └── [slug].astro  # Dynamic blog post pages
-└── styles/
-    └── global.css        # Theme colors and typography
+├── layouts/Layout.astro   # head, fonts, masthead, footer
+├── pages/index.astro      # the page: all of the copy lives here
+└── styles/global.css      # tokens (light and dark), type, spacing, the few components
+public/                    # favicons, robots.txt
 ```
+
+## Design
+
+The page follows Vercel's public `design.md` (https://vercel.com/design.md):
+Geist Sans for text and Geist Mono only for identifiers (the company number,
+the incorporation date, the email), monochrome tokens with light and dark via
+`prefers-color-scheme`, tight gaps inside a group and wide ones between groups,
+and none of the named anti-patterns (eyebrows, section numbers, gradients,
+cards, icon tiles, hero-over-grid). Geist is loaded from Google Fonts; nothing
+else external is loaded.
+
+Facts on the page (company number, dates, address) are verified against the
+Companies House record. Change them there first.

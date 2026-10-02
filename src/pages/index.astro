@@ -1,102 +1,67 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getCollection } from 'astro:content';
-
-const posts = (await getCollection('blog', ({ data }) => {
-  return import.meta.env.PROD ? data.draft !== true : true;
-})).sort(
-  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
-);
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-}
 ---
 
-<Layout title="Sergei Rastrigin - Building Developer Tools">
-  <section class="mb-10">
-    <h1 class="text-2xl font-medium mb-2 text-[var(--color-text)]">
-      Notes on <span class="headline-accent">architecture</span>, AI tooling, and system behavior.
-    </h1>
+<Layout
+  title="Rastrigin Systems Ltd"
+  description="Rastrigin Systems Ltd is a software company in the United Kingdom that builds and owns consumer software and the engines behind it."
+>
+  <div class="opening">
+    <h1 class="title">Rastrigin Systems Ltd</h1>
+    <p class="lede">
+      A software company in the United Kingdom that builds and owns consumer software and the engines behind it.
+    </p>
+  </div>
+
+  <section class="section" aria-labelledby="owns">
+    <h2 class="section-heading" id="owns">What the company owns</h2>
+    <div class="section-body">
+      <ul class="holdings">
+        <li class="holding">
+          <p class="holding-name"><a href="https://asukodance.com">Asuko Dance</a></p>
+          <p class="holding-what">A virtual performer who lives on your desktop and dances to whatever music you play.</p>
+          <p class="holding-how">Native macOS and Windows shells around a WebGL scene; a music-analysis schema and a motion pipeline that turns reference video into baked animation.</p>
+        </li>
+        <li class="holding">
+          <p class="holding-name"><a href="https://gettalkbar.com">Talkbar</a></p>
+          <p class="holding-what">A black pill in the Mac menu bar: speak, and your words are typed where your cursor is.</p>
+          <p class="holding-how">On-device speech recognition; an optional voice for coding agents.</p>
+        </li>
+        <li class="holding">
+          <p class="holding-name">The engine</p>
+          <p class="holding-what">The music-to-choreography pipeline behind Asuko.</p>
+          <p class="holding-how">Analysis of a track into a structured schema, a choreographer that plans a dance from it, and baked motion clips. Proprietary.</p>
+        </li>
+      </ul>
+    </div>
   </section>
 
-  <section>
-    <div class="post-list">
-      {posts.map((post) => (
-        <a
-          href={`/blog/${post.id}`}
-          class="post-card block p-5 rounded-lg group"
-        >
-          <h2 class="text-lg font-medium text-[var(--color-text)] transition-colors">
-            {post.data.title}
-          </h2>
-          <time class="text-xs text-[var(--color-text-muted)] font-mono mt-1 block">
-            {formatDate(post.data.date)}
-          </time>
-          <p class="text-sm text-[var(--color-text-muted)] mt-2 leading-relaxed">
-            {post.data.excerpt}
-          </p>
-        </a>
-      ))}
-    </div>
-
-    {posts.length === 0 && (
-      <p class="text-[var(--color-text-muted)]">
-        Nothing here yet.
+  <section class="section" aria-labelledby="how">
+    <h2 class="section-heading" id="how">How it works</h2>
+    <div class="section-body">
+      <p>
+        A small studio. We design, build and operate our products in-house, and own the code and the characters outright. Much of the generation, rendering and review is done by AI agents working under human direction.
       </p>
-    )}
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="company">
+    <h2 class="section-heading" id="company">Company</h2>
+    <div class="section-body">
+      <dl class="facts">
+        <div><dt>Legal name</dt><dd>Rastrigin Systems Ltd</dd></div>
+        <div><dt>Registered in</dt><dd>England and Wales</dd></div>
+        <div><dt>Company number</dt><dd class="mono">16920450</dd></div>
+        <div><dt>Incorporated</dt><dd class="mono">18 December 2025</dd></div>
+        <div><dt>Registered office</dt><dd>19 Tre Lowen, Pentire Crescent, Newquay, Cornwall, TR7 1FQ, United Kingdom</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="contact">
+    <h2 class="section-heading" id="contact">Contact</h2>
+    <div class="section-body">
+      <p><a class="mono" href="mailto:info@rastrigin.systems">info@rastrigin.systems</a></p>
+    </div>
   </section>
 </Layout>
-
-<style>
-  .headline-accent {
-    text-decoration: underline;
-    text-decoration-color: var(--color-accent);
-    text-decoration-thickness: 3px;
-    text-underline-offset: 6px;
-  }
-
-  .post-list {
-    display: grid;
-    gap: 18px;
-  }
-
-  .post-card {
-    position: relative;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.05));
-    border: none;
-    border-radius: 14px;
-    padding: 22px 24px;
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.03) inset,
-      var(--shadow-card);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .post-card::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 14px;
-    bottom: 14px;
-    width: 2px;
-    border-radius: 2px;
-    background: transparent;
-    transition: background 0.2s ease;
-  }
-
-  .post-card:hover {
-    transform: translateY(-2px);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.03) inset,
-      var(--shadow-card-hover);
-  }
-
-  .post-card:hover::before {
-    background: var(--color-accent);
-  }
-</style>
